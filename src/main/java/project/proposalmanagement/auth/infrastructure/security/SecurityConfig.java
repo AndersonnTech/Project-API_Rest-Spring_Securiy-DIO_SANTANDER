@@ -1,4 +1,4 @@
-package project.proposalmanagement.auth.infrastructure;
+package project.proposalmanagement.auth.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -6,6 +6,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity //Aplicação Spring irá usar o Spring Security
@@ -20,10 +22,24 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception { //SecurityFilterChain Ponto de Entrada de Segurança
-        http.authorizeHttpRequests(auth -> auth
-                .anyRequest().authenticated()) // Todas as requisições terão que ser autenticadas;
-                .formLogin(Customizer.withDefaults()); // Formulário de login;
+    SecurityFilterChain securityFilterChain(HttpSecurity http, RestUsernamePasswordAuthenticationFilter restUsernamePasswordAuthenticationFilter) throws Exception { //SecurityFilterChain Ponto de Entrada de Segurança
+        http
+                .csrf(AbstractHttpConfigurer::disable)//desabilita o csrf para simplificar a aplicação
+
+                //Configuração para salvar a sessão de login requisitada
+                .securityContext(context -> context.requireExplicitSave(false))
+
+                .authorizeHttpRequests(auth -> auth
+
+                        //Habilita a nova url de login atraves de request por json/REST
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .anyRequest().authenticated()) // Todas as requisições terão que ser autenticadas;
+
+                //Substitui a implementação do FormLogin, pela implementação customizada de requisições REST.
+                .addFilterAt(restUsernamePasswordAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        ;
+
+        //              .formLogin(Customizer.withDefaults()); // Formulário de login;
 
         return http.build();
     }
