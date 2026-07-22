@@ -6,14 +6,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import project.proposalmanagement.auth.infrastructure.persistence.entity.User;
 
 @RestController
 @RequestMapping
 public class Controller {
 
     @GetMapping
-    public String hello(@AuthenticationPrincipal UserDetails user) { // Recupera informações de um usuario logado
-        return "Hello World " + user.getUsername();
+    public String hello(@AuthenticationPrincipal User user) { // Recupera informações de um usuario logado
+        return "Hello World " + user.getId();
     }
 
     @GetMapping("/influencer")
